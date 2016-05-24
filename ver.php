@@ -14,15 +14,16 @@ $idProf = $USER->id; // id del usuario actual
 require_login ();
 
 // URL for current page
-$url = new moodle_url("/local/facebook/revisar.php");
+$url = new moodle_url("/local/facebook/ver.php");
 
 $context = context_system::instance ();
 $PAGE->set_url($url);
 $PAGE->set_context($context);
 $PAGE->set_pagelayout("standard");
-$PAGE->set_title('Enviar invitación - Paso 1');
-$PAGE->navbar->add('Enviar invitación - Paso 1');
+$PAGE->set_title('Ver alumnos inscritos');
+$PAGE->navbar->add('Ver alumnos inscritos');
 echo $OUTPUT->header ();
+
 
 ?>
 
@@ -34,7 +35,7 @@ echo $OUTPUT->header ();
                 die(mysql_error());
             }
             mysql_select_db("moodle");
-             // Query para mostrar el curso actual
+            // Query para mostrar el curso actual
             $results2 = mysql_query("SELECT 
 	fullname 
 FROM 
@@ -42,8 +43,27 @@ FROM
 WHERE 
 	id = $idCurso");
             $row2 = mysql_fetch_assoc($results2); 
-             // Query para buscar los no-enlazados, nombre y apellido
+            // Query para mostrar a los enlazados
 $results = mysql_query("SELECT
+ u.firstname, u.lastname, u.id
+FROM
+ mdl_user u,
+ mdl_role_assignments ra,
+ mdl_context con,
+ mdl_course c,
+ mdl_role r,
+ mdl_facebook_user fb
+ WHERE
+ u.id = ra.userid AND
+ ra.contextid = con.id AND
+ con.contextlevel = 50 AND
+ con.instanceid = c.id AND
+ c.id = $idCurso AND
+ u.id = fb.moodleid AND
+ ra.roleid = r.id AND
+ r.shortname = 'student'");
+// Query para mostrar a los no-enlazados y notificados, es decir, caso omiso
+$results2 = mysql_query("SELECT
  u.firstname, u.lastname, u.id
 FROM
  mdl_user u,
@@ -60,6 +80,7 @@ FROM
  c.id = $idCurso AND
  u.id != fb.moodleid AND
  ra.roleid = r.id AND
+ u.notificado = TRUE AND
  r.shortname = 'student'");
  // Query para revisar si el usuario conectado es profesor del curso actual
 $results5 = mysql_query("SELECT 
@@ -81,22 +102,27 @@ WHERE
 
 // Si el usuario es profesor entonces devuelve 1 fila
 if (mysql_num_rows($results5)==1 ) {
-     echo "Usted desea enviar una invitación a los siguientes alumnos, pertenecientes al curso de ".$row2['fullname'] ;   
+     echo "Invitaciónes a enlazar Facebook aceptadas y casos omisos en el curso ".$row2['fullname'] ;   
     echo "<br><br>";
-$idAlumnos=array();?>
+$idAlumnos=array();
+$idAlumnos2=array();
+?>
+
 <body>
-        <table >
-        
+
+        <table style="display: inline-block;margin-right: 60px" >
+
+            <th>Enlazados</th>
+        <th>a Facebook</th>
         <tbody>
 <?php
-// Se van creando filas que se llenan con los datos de la query
+// Tabla para mostrar los enlazados
             while($row = mysql_fetch_array($results)) {
                 $idAlumnos[]=$row['id'];
             ?>
 
                 <tr>
                 <td><?php echo $row['firstname']?></td>
-                 <td><?php echo " "?></td>
                     <td><?php echo $row['lastname']?></td>
                 </tr>
                 
@@ -106,14 +132,32 @@ $idAlumnos=array();?>
         
             </tbody>
             </table>
- 
+    <table style="display: inline-block;" >
+        <th>Caso</th>
+        <th>omiso</th>
+        <tbody>
+            <?php
+            // Tabla para mostrar los casos omisos
+            while($row = mysql_fetch_array($results2)) {
+                $idAlumnos2[]=$row['id'];
+            ?>
+
+                <tr>
+                <td ><?php echo $row['firstname']?></td>
+                 <td><?php echo " "?></td>
+                    <td><?php echo $row['lastname']?></td>
+                </tr>
+                
+            <?php
+            }
+            ?>
+
+                           </tbody>
+            </table>
     <br>
-    <!-- Redirigir a paso 2 o volver al curso, cid es la id del curso -->
-    <form method="post" style ="display: inline;" action="revisar2.php?cid=<?php echo $idCurso;?>">
-    <input type="submit">
-</form>
-    <form method="post" style ="display: inline;" action="/moodle/course/view.php?id=<?php echo $idCurso;?>">
-    <input type="submit" value="Cancelar">
+    <!-- Boton para ir a enviar invitacion paso 1, cid es la id del curso -->
+    <form method="post" style ="display: inline;" action="revisar.php?id=<?php echo $idCurso;?>">
+    <input type="submit" value="Reenviar invitación">
 </form>
                 <?php
 }
