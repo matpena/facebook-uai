@@ -34,7 +34,7 @@ echo $OUTPUT->header ();
             if (!$connect) {
                 die(mysql_error());
             }
-            mysql_select_db("moodle");
+            mysql_select_db("moodle31");
             // Query para mostrar el curso actual
             $results2 = mysql_query("SELECT 
 	fullname 

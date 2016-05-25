@@ -33,7 +33,7 @@ echo $OUTPUT->header ();
             if (!$connect) {
                 die(mysql_error());
             }
-            mysql_select_db("moodle");
+            mysql_select_db("moodle31");
              // Query para mostrar el curso actual
             $results2 = mysql_query("SELECT 
 	fullname 
@@ -112,7 +112,7 @@ $idAlumnos=array();?>
     <form method="post" style ="display: inline;" action="revisar2.php?cid=<?php echo $idCurso;?>">
     <input type="submit">
 </form>
-    <form method="post" style ="display: inline;" action="/moodle/course/view.php?id=<?php echo $idCurso;?>">
+    <form method="post" style ="display: inline;" action="<?php echo $CFG->wwwroot ?>/course/view.php?id=<?php echo $idCurso;?>">
     <input type="submit" value="Cancelar">
 </form>
                 <?php
