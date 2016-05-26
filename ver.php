@@ -10,6 +10,7 @@ global $DB, $USER, $CFG, $COURSE;
 
 $idCurso = $_GET['id'];  // id del curso actual
 $idProf = $USER->id; // id del usuario actual
+$prefix= $CFG->prefix; //prefijo de las tablas de moodle
 
 require_login ();
 
@@ -28,84 +29,67 @@ echo $OUTPUT->header ();
 ?>
 
         
-        <?php
-        // Query para conectarse con la base de datos
-         $connect = mysql_connect("localhost","root", "root");
-            if (!$connect) {
-                die(mysql_error());
-            }
-            mysql_select_db("moodle31");
+<?php
+        
             // Query para mostrar el curso actual
-            $results2 = mysql_query("SELECT 
+            $results3 = $DB->get_records_sql('SELECT 
 	fullname 
 FROM 
-	`mdl_course` 
+	 '.$prefix.'course 
 WHERE 
-	id = $idCurso");
-            $row2 = mysql_fetch_assoc($results2); 
+	id = ?', array($idCurso));
+foreach ($results3  as $element)  {
+    $nombreCurso= $element->fullname;
+}
+   
             // Query para mostrar a los enlazados
-$results = mysql_query("SELECT
- u.firstname, u.lastname, u.id
+$results = $DB->get_records_sql('SELECT
+ u.id,u.firstname, u.lastname
 FROM
- mdl_user u,
- mdl_role_assignments ra,
- mdl_context con,
- mdl_course c,
- mdl_role r,
- mdl_facebook_user fb
- WHERE
+ '.$prefix.'user u,
+ '.$prefix.'role_assignments ra,
+ '.$prefix.'context con,
+ '.$prefix.'course c,
+ '.$prefix.'role r,
+ '.$prefix.'facebook_user fb
+ WHERE 
  u.id = ra.userid AND
  ra.contextid = con.id AND
  con.contextlevel = 50 AND
  con.instanceid = c.id AND
- c.id = $idCurso AND
+ c.id = ? AND
  u.id = fb.moodleid AND
  ra.roleid = r.id AND
- r.shortname = 'student'");
+ r.shortname = ?', array($idCurso, 'student'));
+
+
 // Query para mostrar a los no-enlazados y notificados, es decir, caso omiso
-$results2 = mysql_query("SELECT
- u.firstname, u.lastname, u.id
+$results2 = $DB->get_records_sql('SELECT
+ u.id,u.firstname, u.lastname
 FROM
- mdl_user u,
- mdl_role_assignments ra,
- mdl_context con,
- mdl_course c,
- mdl_role r,
- mdl_facebook_user fb
- WHERE
+ '.$prefix.'user u,
+ '.$prefix.'role_assignments ra,
+ '.$prefix.'context con,
+ '.$prefix.'course c,
+ '.$prefix.'role r,
+ '.$prefix.'facebook_user fb
+ WHERE 
  u.id = ra.userid AND
  ra.contextid = con.id AND
  con.contextlevel = 50 AND
  con.instanceid = c.id AND
- c.id = $idCurso AND
+ c.id = ? AND
  u.id != fb.moodleid AND
  ra.roleid = r.id AND
  u.notificado = TRUE AND
- r.shortname = 'student'");
- // Query para revisar si el usuario conectado es profesor del curso actual
-$results5 = mysql_query("SELECT 
-	c.id, 
-	c.shortname, 
-	u.id, 
-	u.username, 
-	CONCAT(u.firstname, ' ', u.lastname) AS name 
-FROM 
-	mdl_course c 
-	LEFT OUTER JOIN mdl_context cx ON c.id = cx.instanceid 
-	LEFT OUTER JOIN mdl_role_assignments ra ON cx.id = ra.contextid 
-	AND ra.roleid = '3' 
-	LEFT OUTER JOIN mdl_user u ON ra.userid = u.id 
-WHERE 
-	cx.contextlevel = '50' 
-	AND c.id = $idCurso
-        AND u.id =$idProf");
+ r.shortname = ?', array($idCurso, 'student'));
 
-// Si el usuario es profesor entonces devuelve 1 fila
-if (mysql_num_rows($results5)==1 ) {
-     echo "Invitaciónes a enlazar Facebook aceptadas y casos omisos en el curso ".$row2['fullname'] ;   
+//revisar si el usuario conectado es profesor del curso actual
+
+$context = context_course::instance($idCurso);
+            if(has_capability('mod/assignment:addinstance', $context)) {
+     echo "Invitaciónes a enlazar Facebook aceptadas y casos omisos en el curso ".$nombreCurso;   
     echo "<br><br>";
-$idAlumnos=array();
-$idAlumnos2=array();
 ?>
 
 <body>
@@ -117,13 +101,12 @@ $idAlumnos2=array();
         <tbody>
 <?php
 // Tabla para mostrar los enlazados
-            while($row = mysql_fetch_array($results)) {
-                $idAlumnos[]=$row['id'];
+           foreach ($results  as $element)  {
             ?>
 
                 <tr>
-                <td><?php echo $row['firstname']?></td>
-                    <td><?php echo $row['lastname']?></td>
+                <td><?php echo $element->firstname?></td>
+                    <td><?php echo $element->lastname?></td>
                 </tr>
                 
             <?php
@@ -138,14 +121,13 @@ $idAlumnos2=array();
         <tbody>
             <?php
             // Tabla para mostrar los casos omisos
-            while($row = mysql_fetch_array($results2)) {
-                $idAlumnos2[]=$row['id'];
+            foreach ($results2  as $element)  {
             ?>
 
                 <tr>
-                <td ><?php echo $row['firstname']?></td>
+                <td ><?php echo $element->firstname?></td>
                  <td><?php echo " "?></td>
-                    <td><?php echo $row['lastname']?></td>
+                    <td><?php echo $element->lastname?></td>
                 </tr>
                 
             <?php
