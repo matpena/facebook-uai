@@ -10,7 +10,7 @@ global $DB, $USER, $CFG, $COURSE;
 $idProf = $USER->id; // id del usuario
 $nomProf = $USER->firstname; // Nombre del profesor, para mandar el mail
 $apProf = $USER->lastname; // Apellido del profesor, para mandar el mail
-
+$prefix= $CFG->prefix; //prefijo de las tablas de moodle
 require_login ();
 
 // URL for current page
@@ -31,70 +31,56 @@ echo $OUTPUT->header ();
             if (!$connect) {
                 die(mysql_error());
             }
-            mysql_select_db("moodle31");
-            // Query para mostrar el curso actual
-$results2 = mysql_query("SELECT 
+            mysql_select_db("moodle");
+           // Query para mostrar el curso actual
+            $results2 = $DB->get_records_sql('SELECT 
 	fullname 
 FROM 
-	`mdl_course` 
+	 '.$prefix.'course 
 WHERE 
-	id = $idCurso");
-
-            $row2 = mysql_fetch_assoc($results2);
-$nomCurso = $row2['fullname']; // El nombre del curso
+	id = ?', array($idCurso));
+foreach ($results2  as $element)  {
+    $nombreCurso= $element->fullname;
+}
 // Query para buscar los no-enlazados, nombre apellido, mail
-$results = mysql_query("SELECT
-u.firstname, u.lastname, u.email
+$results = $DB->get_records_sql('SELECT
+ u.firstname, u.lastname, u.email
 FROM
- mdl_user u,
- mdl_role_assignments ra,
- mdl_context con,
- mdl_course c,
- mdl_role r,
-mdl_facebook_user fb
-WHERE
+ '.$prefix.'user u,
+ '.$prefix.'role_assignments ra,
+ '.$prefix.'context con,
+ '.$prefix.'course c,
+ '.$prefix.'role r,
+ '.$prefix.'facebook_user fb
+ WHERE 
  u.id = ra.userid AND
  ra.contextid = con.id AND
  con.contextlevel = 50 AND
  con.instanceid = c.id AND
- c.id = $idCurso AND
-u.id != fb.moodleid AND
+ c.id = ? AND
+ u.id != fb.moodleid AND
  ra.roleid = r.id AND
- r.shortname = 'student'");
- // Query para revisar si el usuario conectado es profesor del curso actual
-$results5 = mysql_query("SELECT 
-	c.id, 
-	c.shortname, 
-	u.id, 
-	u.username, 
-	CONCAT(u.firstname, ' ', u.lastname) AS name 
-FROM 
-	mdl_course c 
-	LEFT OUTER JOIN mdl_context cx ON c.id = cx.instanceid 
-	LEFT OUTER JOIN mdl_role_assignments ra ON cx.id = ra.contextid 
-	AND ra.roleid = '3' 
-	LEFT OUTER JOIN mdl_user u ON ra.userid = u.id 
-WHERE 
-	cx.contextlevel = '50' 
-	AND c.id = $idCurso
-        AND u.id =$idProf");
-// Si el usuario es profesor entonces devuelve 1 fila
-if (mysql_num_rows($results5)==1 ) {
+ r.shortname = ?', array($idCurso, 'student'));
+ 
+//revisar si el usuario conectado es profesor del curso actual
+
+$context = context_course::instance($idCurso);
+ if(has_capability('mod/assignment:addinstance', $context)) {
 $emailAlumnos=array();
 echo "Usted ha enviado exitosamente la invitacion a las siguientes personas:";
-            while($row = mysql_fetch_array($results)) {
-                // Mostrar los resultados, emails, de la query
-                $emailAlumnos[]=$row['email'];
+    // Mostrar los resultados, emails, de la query            
+               foreach ($results  as $element)  {
+
             ?>
        
         <table >
         
         <tbody>
                 <tr>
-                    <td><?php echo $row['firstname']?></td>
+                    <td><?php echo $element->firstname?></td>
                     <td><?php echo " "?></td>
-                    <td><?php echo $row['lastname']?></td>
-                <td><?php echo '('.$row['email'].')'?></td>
+                    <td><?php echo $element->lastname?></td>
+                <td><?php echo '('.$element->email.')'?></td>
                     
                 </tr>
                 
@@ -110,24 +96,24 @@ echo "Usted ha enviado exitosamente la invitacion a las siguientes personas:";
     
 <?php
 // Query para obtener las ids de los no-enlazados
-$resultsIds = mysql_query("SELECT
+$resultsIds = $DB->get_records_sql('SELECT
  u.id
 FROM
- mdl_user u,
- mdl_role_assignments ra,
- mdl_context con,
- mdl_course c,
- mdl_role r,
-mdl_facebook_user fb
-WHERE
+ '.$prefix.'user u,
+ '.$prefix.'role_assignments ra,
+ '.$prefix.'context con,
+ '.$prefix.'course c,
+ '.$prefix.'role r,
+ '.$prefix.'facebook_user fb
+ WHERE 
  u.id = ra.userid AND
  ra.contextid = con.id AND
  con.contextlevel = 50 AND
  con.instanceid = c.id AND
- c.id = $idCurso AND
-u.id != fb.moodleid AND
+ c.id = ? AND
+ u.id != fb.moodleid AND
  ra.roleid = r.id AND
- r.shortname = 'student'");
+ r.shortname = ?', array($idCurso, 'student'));
 
 $count = 1; // Contador para parar cada 5 mails enviados
 
@@ -148,23 +134,24 @@ $message->contexturlname = 'Context name';
 $message->replyto = "noreply@webcursos.uai.cl";
 $content = array('*' => array('header' => ' De '.$nomProf.' '.$apProf, 'footer' => '  ')); // Extra content for specific processor
 $message->set_additional_content('email', $content);
-while($row = mysql_fetch_array($resultsIds)) {
 
+foreach ($resultsIds  as $element)  {
+    
 // en este ciclo se van mandando los mails a cada id
-$message->userto = $row['id'];
-$uId=$row['id'];
+$message->userto = $element->id;
+$uId=$element->id;
 $messageid = message_send($message); 
 // a cada id que se le envía un mail se le cambia el valor de la base de datos "notificado" por TRUE
-$notificado = mysql_query("
-UPDATE 
-	`mdl_user` 
+$record = new stdclass;
+$record->id = $uId;
+$record->notificado = TRUE;
+$notificado = $DB->execute("UPDATE 
+	 {user}
 SET 
 	notificado = TRUE 
 WHERE 
-	id = $uId");
-
-
-
+        id = ? ",array ($uId));
+//$notificado = $DB->update_record('user', $record); 
 
 if ($count % 5 == 0) {
       sleep(5); // this will wait 5 secs every 5 emails sent, and then continue the while loop
