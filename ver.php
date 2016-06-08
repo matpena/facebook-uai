@@ -88,7 +88,7 @@ FROM
 
 $context = context_course::instance($idCurso);
             if(has_capability('mod/assignment:addinstance', $context)) {
-     echo "Invitaciónes a enlazar Facebook aceptadas y casos omisos en el curso ".$nombreCurso;   
+     echo "Invitaciónes a enlazar Facebook aceptadas e invitaciones ignoradas en el curso ".$nombreCurso.".";   
     echo "<br><br>";
 ?>
 
@@ -115,9 +115,9 @@ $context = context_course::instance($idCurso);
         
             </tbody>
             </table>
-    <table style="display: inline-block;" >
-        <th>Caso</th>
-        <th>omiso</th>
+    <table style="display: inline-block;"  >
+        <th>Invitaciones</th>
+        <th>ignoradas</th>
         <tbody>
             <?php
             // Tabla para mostrar los casos omisos
@@ -126,7 +126,7 @@ $context = context_course::instance($idCurso);
 
                 <tr>
                 <td ><?php echo $element->firstname?></td>
-                 <td><?php echo " "?></td>
+                 
                     <td><?php echo $element->lastname?></td>
                 </tr>
                 

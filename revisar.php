@@ -61,7 +61,7 @@ FROM
 
 $context = context_course::instance($idCurso);
             if(has_capability('mod/assignment:addinstance', $context)) {
-     echo "Usted desea enviar una invitación a los siguientes alumnos, pertenecientes al curso de ".$nombreCurso ;   
+     echo "Usted enviará una invitación para enlazar Webcursos con Facebook a los siguientes alumnos, pertenecientes al curso de ".$nombreCurso."." ;   
     echo "<br><br>";
 ?>
 
