@@ -54,9 +54,13 @@ FROM
  con.contextlevel = 50 AND
  con.instanceid = c.id AND
  c.id = ? AND
- u.id != fb.moodleid AND
  ra.roleid = r.id AND
- r.shortname = ?', array($idCurso, 'student'));
+ r.shortname = ? AND
+ u.id NOT IN (
+		SELECT 
+			fb.moodleid 
+		FROM 
+			mdl_facebook_user fb )', array($idCurso, 'student'));
 //revisar si el usuario conectado es profesor del curso actual
 
 $context = context_course::instance($idCurso);
@@ -68,7 +72,7 @@ $context = context_course::instance($idCurso);
 
 <body>
         <table >
-        
+            
         <tbody>
 <?php
 // Se van creando filas que se llenan con los datos de la query
@@ -91,7 +95,7 @@ $context = context_course::instance($idCurso);
     <br>
     <!-- Redirigir a paso 2 o volver al curso, cid es la id del curso -->
     <form method="post" style ="display: inline;" action="revisar2.php?cid=<?php echo $idCurso;?>">
-    <input type="submit">
+    <input type="submit" value="Confirmar envío">
 </form>
     <form method="post" style ="display: inline;" action="<?php echo $CFG->wwwroot ?>/course/view.php?id=<?php echo $idCurso;?>">
     <input type="submit" value="Cancelar">

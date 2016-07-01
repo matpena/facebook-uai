@@ -79,10 +79,14 @@ FROM
  con.contextlevel = 50 AND
  con.instanceid = c.id AND
  c.id = ? AND
- u.id != fb.moodleid AND
  ra.roleid = r.id AND
  u.notificado = TRUE AND
- r.shortname = ?', array($idCurso, 'student'));
+ r.shortname = ? AND
+ u.id NOT IN (
+		SELECT 
+			fb.moodleid 
+		FROM 
+			mdl_facebook_user fb )', array($idCurso, 'student'));
 
 //revisar si el usuario conectado es profesor del curso actual
 

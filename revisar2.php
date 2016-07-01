@@ -58,9 +58,13 @@ FROM
  con.contextlevel = 50 AND
  con.instanceid = c.id AND
  c.id = ? AND
- u.id != fb.moodleid AND
  ra.roleid = r.id AND
- r.shortname = ?', array($idCurso, 'student'));
+ r.shortname = ? AND
+ u.id NOT IN (
+		SELECT 
+			fb.moodleid 
+		FROM 
+			mdl_facebook_user fb )', array($idCurso, 'student'));
  
 //revisar si el usuario conectado es profesor del curso actual
 
@@ -111,9 +115,13 @@ FROM
  con.contextlevel = 50 AND
  con.instanceid = c.id AND
  c.id = ? AND
- u.id != fb.moodleid AND
  ra.roleid = r.id AND
- r.shortname = ?', array($idCurso, 'student'));
+ r.shortname = ? AND
+ u.id NOT IN (
+		SELECT 
+			fb.moodleid 
+		FROM 
+			mdl_facebook_user fb )', array($idCurso, 'student'));
 
 $count = 1; // Contador para parar cada 5 mails enviados
 
@@ -124,9 +132,9 @@ $message->component = 'moodle';
 $message->name = 'instantmessage';
 $message->userfrom = 1; //Se envia desde el usuario id 1, se podría crear un usuario especifico para esto
 $message->subject = 'Invitación para enlazar cuenta con Facebook';
-$message->fullmessage = 'Usted ha recibido una invitación del curso '.$nomCurso.' para enlazar su cuenta con Facebook, por favor dirigirse al siguiente link: http://localhost:8888/moodle/local/facebook/connect.php';
+$message->fullmessage = 'Usted ha recibido una invitación del curso '.$nomCurso.' para enlazar su cuenta con Facebook, por favor dirigirse al siguiente link: '.$CFG->wwwroot.'/local/facebook/connect.php';
 $message->fullmessageformat = FORMAT_MARKDOWN;
-$message->fullmessagehtml = '<p>Usted ha recibido una invitación del curso '.$nomCurso.' para enlazar su cuenta con Facebook, por favor dirigirse al siguiente link: </p><p><a href="http://localhost:8888/moodle/local/facebook/connect.php">http://localhost:8888/moodle/local/facebook/connect.php</a></p>';
+$message->fullmessagehtml = '<p>Usted ha recibido una invitación del curso '.$nomCurso.' para enlazar su cuenta con Facebook, por favor dirigirse al siguiente link: </p><p><a href='.$CFG->wwwroot.'/local/facebook/connect.php>'.$CFG->wwwroot.'/local/facebook/connect.php</a></p>';
 $message->smallmessage = 'small message';
 $message->notification = '0';
 $message->contexturl = '';
