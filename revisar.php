@@ -40,7 +40,7 @@ foreach ($results2  as $element)  {
 
              // Query para buscar los no-enlazados, nombre y apellido
 $results = $DB->get_records_sql('SELECT
- u.id,u.firstname, u.lastname
+ u.firstname, u.lastname
 FROM
  '.$prefix.'user u,
  '.$prefix.'role_assignments ra,
@@ -67,31 +67,25 @@ $context = context_course::instance($idCurso);
             if(has_capability('mod/assignment:addinstance', $context)) {
      echo "Usted enviará una invitación para enlazar Webcursos con Facebook a los siguientes alumnos, pertenecientes al curso de ".$nombreCurso."." ;   
     echo "<br><br>";
-?>
+  $tabledata = array();
+    $tablerow = array();
+    $tableheadings = array(Apellido,Nombre);
+
+foreach($results AS $statusdata){
+	$tablerow = array();
+	$tablerow[] = $statusdata->lastname;
+	$tablerow[] = $statusdata->firstname;
+	$tabledata[] = $tablerow;
+}
+$table = new html_table();
+$table->head = $tableheadings;
+$table->data = $tabledata;
+echo html_writer::table($table);
+    
+    ?>
 
 
 <body>
-        <table >
-            
-        <tbody>
-<?php
-// Se van creando filas que se llenan con los datos de la query
-            foreach ($results  as $element)  {
-            ?>
-
-                <tr>
-                <td><?php echo $element->firstname?></td>
-                 <td><?php echo " "?></td>
-                    <td><?php echo $element->lastname?></td>
-                </tr>
-                
-            <?php
-            }
-            ?>
-        
-            </tbody>
-            </table>
- 
     <br>
     <!-- Redirigir a paso 2 o volver al curso, cid es la id del curso -->
     <form method="post" style ="display: inline;" action="revisar2.php?cid=<?php echo $idCurso;?>">

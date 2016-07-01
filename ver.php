@@ -44,7 +44,7 @@ foreach ($results3  as $element)  {
    
             // Query para mostrar a los enlazados
 $results = $DB->get_records_sql('SELECT
- u.id,u.firstname, u.lastname
+ u.email,u.firstname, u.lastname
 FROM
  '.$prefix.'user u,
  '.$prefix.'role_assignments ra,
@@ -65,7 +65,7 @@ FROM
 
 // Query para mostrar a los no-enlazados y notificados, es decir, caso omiso
 $results2 = $DB->get_records_sql('SELECT
- u.id,u.firstname, u.lastname
+ u.email,u.firstname, u.lastname
 FROM
  '.$prefix.'user u,
  '.$prefix.'role_assignments ra,
@@ -92,55 +92,50 @@ FROM
 
 $context = context_course::instance($idCurso);
             if(has_capability('mod/assignment:addinstance', $context)) {
-     echo "Invitaciónes a enlazar Facebook aceptadas e invitaciones ignoradas en el curso ".$nombreCurso.".";   
+     echo "Invitaciónes a enlazar Facebook <b>aceptadas</b> en el curso ".$nombreCurso.".";   
     echo "<br><br>";
+    // Tabla 1
+    $tabledata1 = array();
+    $tablerow2 = array();
+    $tableheadings3 = array(Apellido,Nombre,Email);
+
+foreach($results AS $statusdata){
+	$tablerow2 = array();
+	$tablerow2[] = $statusdata->lastname;
+	$tablerow2[] = $statusdata->firstname;
+	$tablerow2[] = $statusdata->email;
+	$tabledata1[] = $tablerow2;
+}
+$table1 = new html_table();
+$table1->head = $tableheadings3;
+$table1->data = $tabledata1;
+echo html_writer::table($table1);
+
+echo "Invitaciónes a enlazar Facebook <b>ignoradas</b>.";   
+    echo "<br><br>";
+    // Tabla 2
+    $tabledata = array();
+    $tablerow = array();
+    $tableheadings = array(Apellido,Nombre,Email);
+
+foreach($results2 AS $statusdata){
+	$tablerow = array();
+	$tablerow[] = $statusdata->lastname;
+	$tablerow[] = $statusdata->firstname;
+	$tablerow[] = $statusdata->email;
+	$tabledata[] = $tablerow;
+}
+$table = new html_table();
+$table->head = $tableheadings;
+$table->data = $tabledata;
+echo html_writer::table($table);
+
+
+
 ?>
 
 <body>
 
-        <table style="display: inline-block;margin-right: 60px" >
-
-            <th>Enlazados</th>
-        <th>a Facebook</th>
-        <tbody>
-<?php
-// Tabla para mostrar los enlazados
-           foreach ($results  as $element)  {
-            ?>
-
-                <tr>
-                <td><?php echo $element->firstname?></td>
-                    <td><?php echo $element->lastname?></td>
-                </tr>
-                
-            <?php
-            }
-            ?>
-        
-            </tbody>
-            </table>
-    <table style="display: inline-block;"  >
-        <th>Invitaciones</th>
-        <th>ignoradas</th>
-        <tbody>
-            <?php
-            // Tabla para mostrar los casos omisos
-            foreach ($results2  as $element)  {
-            ?>
-
-                <tr>
-                <td ><?php echo $element->firstname?></td>
-                 
-                    <td><?php echo $element->lastname?></td>
-                </tr>
-                
-            <?php
-            }
-            ?>
-
-                           </tbody>
-            </table>
-    <br>
     <!-- Boton para ir a enviar invitacion paso 1, cid es la id del curso -->
     <form method="post" style ="display: inline;" action="revisar.php?id=<?php echo $idCurso;?>">
     <input type="submit" value="Reenviar invitación">

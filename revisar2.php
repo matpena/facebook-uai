@@ -73,27 +73,24 @@ $context = context_course::instance($idCurso);
 $emailAlumnos=array();
 echo "Usted ha enviado exitosamente la invitacion a las siguientes personas:";
     // Mostrar los resultados, emails, de la query            
-               foreach ($results  as $element)  {
+  $tabledata = array();
+    $tablerow = array();
+    $tableheadings = array(Apellido,Nombre,Email);
+
+foreach($results AS $statusdata){
+	$tablerow = array();
+	$tablerow[] = $statusdata->lastname;
+	$tablerow[] = $statusdata->firstname;
+	$tablerow[] = $statusdata->email;
+	$tabledata[] = $tablerow;
+}
+$table = new html_table();
+$table->head = $tableheadings;
+$table->data = $tabledata;
+echo html_writer::table($table);
 
             ?>
-       
-        <table >
-        
-        <tbody>
-                <tr>
-                    <td><?php echo $element->firstname?></td>
-                    <td><?php echo " "?></td>
-                    <td><?php echo $element->lastname?></td>
-                <td><?php echo '('.$element->email.')'?></td>
-                    
-                </tr>
-                
-            <?php
-            }
-            ?>
-       
-            </tbody>
-            </table>
+
 <!-- Volver al curso -->
  <form method="post" style ="display: inline;" action="<?php echo $CFG->wwwroot ?>/course/view.php?id=<?php echo $idCurso;?>">
     <input type="submit" value="Volver al curso">
@@ -132,9 +129,9 @@ $message->component = 'moodle';
 $message->name = 'instantmessage';
 $message->userfrom = 1; //Se envia desde el usuario id 1, se podría crear un usuario especifico para esto
 $message->subject = 'Invitación para enlazar cuenta con Facebook';
-$message->fullmessage = 'Usted ha recibido una invitación del curso '.$nomCurso.' para enlazar su cuenta con Facebook, por favor dirigirse al siguiente link: '.$CFG->wwwroot.'/local/facebook/connect.php';
+$message->fullmessage = 'Usted ha recibido una invitación del curso '.$nombreCurso.' para enlazar su cuenta con Facebook, por favor dirigirse al siguiente link: '.$CFG->wwwroot.'/local/facebook/connect.php';
 $message->fullmessageformat = FORMAT_MARKDOWN;
-$message->fullmessagehtml = '<p>Usted ha recibido una invitación del curso '.$nomCurso.' para enlazar su cuenta con Facebook, por favor dirigirse al siguiente link: </p><p><a href='.$CFG->wwwroot.'/local/facebook/connect.php>'.$CFG->wwwroot.'/local/facebook/connect.php</a></p>';
+$message->fullmessagehtml = '<p>Usted ha recibido una invitación del curso '.$nombreCurso.' para enlazar su cuenta con Facebook, por favor dirigirse al siguiente link: </p><p><a href='.$CFG->wwwroot.'/local/facebook/connect.php>'.$CFG->wwwroot.'/local/facebook/connect.php</a></p>';
 $message->smallmessage = 'small message';
 $message->notification = '0';
 $message->contexturl = '';
